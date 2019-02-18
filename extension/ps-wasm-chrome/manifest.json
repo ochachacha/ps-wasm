@@ -1,0 +1,18 @@
+{
+	"name": "PS-WASM",
+	"version": "0.1",
+	"description": "Rendering PostScript using GhostScript in WebAssembly.",
+	"manifest_version": 2,
+	"background": {
+		"scripts": [
+		"background.js"
+		]
+	},
+	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+	"permissions": [
+		"tabs",
+		"<all_urls>",
+		"webRequest",
+		"webRequestBlocking"
+	]
+}
