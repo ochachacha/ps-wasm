@@ -61,56 +61,65 @@ chrome.webRequest.onBeforeRequest.addListener(function(info) {
 var Module;
 
 function _GSPS2PDF(dataStruct, responseCallback, progressCallback, statusUpdateCallback) {
-	//set up EMScripten environment
-	Module = {
-        preRun: [function(){
-		var data = FS.writeFile('input.ps', new Uint8Array(dataStruct.psData));
-	}],
-        postRun: [function() {
-		var uarray = FS.readFile('output.pdf', {encoding: 'binary'}); //Uint8Array
-		responseCallback({pdfData: Array.from(uarray), url: dataStruct.url});
-	}],
-	arguments: ['-sDEVICE=pdfwrite', '-DBATCH', '-DNOPAUSE',
-	 '-q',
-	 '-sOutputFile=output.pdf', '-c', '.setpdfwrite <</AlwaysEmbed [/Helvetica /Times-Roman]>> setdistillerparams', '-f', 'input.ps'],
-        print: function(text) {
-           statusUpdateCallback(text);
+  // first download the ps data
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", dataStruct.psDataURL);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = function() {
+    // release the URL
+    window.URL.revokeObjectURL(dataStruct.psDataURL);
+    //set up EMScripten environment
+  	Module = {
+          preRun: [function(){
+  		var data = FS.writeFile('input.ps', new Uint8Array(xhr.response));
+  	}],
+          postRun: [function() {
+  		var uarray = FS.readFile('output.pdf', {encoding: 'binary'}); //Uint8Array
+  		responseCallback({pdfData: Array.from(uarray), url: dataStruct.url});
+  	}],
+  	arguments: ['-sDEVICE=pdfwrite', '-DBATCH', '-DNOPAUSE',
+  	 '-q',
+  	 '-sOutputFile=output.pdf', '-c', '.setpdfwrite <</AlwaysEmbed [/Helvetica /Times-Roman]>> setdistillerparams', '-f', 'input.ps'],
+          print: function(text) {
+             statusUpdateCallback(text);
+            },
+          printErr: function(text) {
+  	   statusUpdateCallback('Error: ' + text);
+  	   console.error(text);
           },
-        printErr: function(text) {
-	   statusUpdateCallback('Error: ' + text);
-	   console.error(text);
-        },
-        setStatus: function(text) {
-          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
-          if (text === Module.setStatus.last.text) return;
-          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-          var now = Date.now();
-          if (m && now - Module.setStatus.last.time < 30) // if this is a progress update, skip it if too soon
-		return;
-          Module.setStatus.last.time = now;
-          Module.setStatus.last.text = text;
-          if (m) {
-            text = m[1];
-            progressCallback(false, parseInt(m[2])*100, parseInt(m[4])*100);
-          } else {
-            progressCallback(true, 0, 0);
-          }
-          statusUpdateCallback(text);
-        },
-        totalDependencies: 0
-      };
-	Module.setStatus('Loading Postscript Converter...');
-	loadScript('gs.js', null);
+          setStatus: function(text) {
+            if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+            if (text === Module.setStatus.last.text) return;
+            var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+            var now = Date.now();
+            if (m && now - Module.setStatus.last.time < 30) // if this is a progress update, skip it if too soon
+  		return;
+            Module.setStatus.last.time = now;
+            Module.setStatus.last.text = text;
+            if (m) {
+              text = m[1];
+              progressCallback(false, parseInt(m[2])*100, parseInt(m[4])*100);
+            } else {
+              progressCallback(true, 0, 0);
+            }
+            statusUpdateCallback(text);
+          },
+          totalDependencies: 0
+        };
+  	Module.setStatus('Loading Postscript Converter...');
+  	loadScript('gs.js', null);
+  };
+  xhr.send();
 }
 
 chrome.runtime.onConnect.addListener(function(port) {
 	if (port.name == 'ps2pdfport') {
 	port.onMessage.addListener(function(msg) {
 		if (msg.requestType == 'ps2pdf') {
-			psData = msg.requestData;
-			_GSPS2PDF(psData, function(replyData) {
+			requestData = msg.requestData;
+			_GSPS2PDF(requestData, function(replyData) {
 				port.postMessage({msgType: 'result', data: replyData});
-			}, 
+			},
 			function(is_done, value, max_val) {
 				port.postMessage({
 				msgType: 'convprog', isDone: is_done, value: value, maxVal: max_val});

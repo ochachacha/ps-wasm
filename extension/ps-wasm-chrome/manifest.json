@@ -1,6 +1,8 @@
 {
+"update_url": "https://clients2.google.com/service/update2/crx",
+
 	"name": "PS-WASM",
-	"version": "0.1",
+	"version": "0.2",
 	"description": "Rendering PostScript using GhostScript in WebAssembly.",
 	"manifest_version": 2,
 	"background": {

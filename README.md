@@ -7,9 +7,11 @@ Currently only Chrome is supported.
 
 ------
 
-TODO:
-* Allow refreshing of the viewer page.
-* Fix URL display, if possible.
+August 2019: v0.2 updates:
+
+* Large files are now supported.
+* PDF files can now be saved.
+* Improved URL and title display.
 
 ------
 
