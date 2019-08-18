@@ -75,7 +75,9 @@ function _GSPS2PDF(dataStruct, responseCallback, progressCallback, statusUpdateC
   	}],
           postRun: [function() {
   		var uarray = FS.readFile('output.pdf', {encoding: 'binary'}); //Uint8Array
-  		responseCallback({pdfData: Array.from(uarray), url: dataStruct.url});
+      var blob = new Blob([uarray], {type: "application/octet-stream"});
+      var pdfDataURL = window.URL.createObjectURL(blob);
+  		responseCallback({pdfDataURL: pdfDataURL, url: dataStruct.url});
   	}],
   	arguments: ['-sDEVICE=pdfwrite', '-DBATCH', '-DNOPAUSE',
   	 '-q',
@@ -84,8 +86,8 @@ function _GSPS2PDF(dataStruct, responseCallback, progressCallback, statusUpdateC
              statusUpdateCallback(text);
             },
           printErr: function(text) {
-  	   statusUpdateCallback('Error: ' + text);
-  	   console.error(text);
+  	         statusUpdateCallback('Error: ' + text);
+  	          console.error(text);
           },
           setStatus: function(text) {
             if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };

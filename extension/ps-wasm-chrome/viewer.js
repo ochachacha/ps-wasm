@@ -26,19 +26,25 @@ function pullData(data_url, progressCallback, readyCallback) {
 }
 
 function loadPDFData(response) {
-	var pdfData = new Uint8Array(response.pdfData);
-	var blob = new Blob([pdfData], {type: "application/pdf"});
-	var pdfURL = window.URL.createObjectURL(blob);
-  var filename = new URL(response.url).pathname.split('/').pop();
-  var displayURL = "chrome-extension://" + chrome.runtime.id + '/' + response.url; // this is the best we can do
-  document.getElementById('wrapper').remove();
-  var frame = document.getElementById('the_frame');
-  frame.width = '100%';
-  frame.style.height = '100vh';
-  frame.style.border = '0px';
-  frame.src = pdfURL;
-  window.history.replaceState(null, "PDF Title", displayURL);
-  document.title = filename;
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", response.pdfDataURL);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = function() {
+    window.URL.revokeObjectURL(response.pdfDataURL);
+    var blob = new Blob([xhr.response], {type: "application/pdf"});
+  	var pdfURL = window.URL.createObjectURL(blob);
+    var filename = new URL(response.url).pathname.split('/').pop();
+    var displayURL = "chrome-extension://" + chrome.runtime.id + '/' + response.url; // this is the best we can do
+    document.getElementById('wrapper').remove();
+    var frame = document.getElementById('the_frame');
+    frame.width = '100%';
+    frame.style.height = '100vh';
+    frame.style.border = '0px';
+    frame.src = pdfURL;
+    window.history.replaceState(null, filename, displayURL);
+    document.title = filename;
+  };
+  xhr.send();
 }
 
 window.onload = function() {
