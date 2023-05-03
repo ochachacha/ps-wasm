@@ -1,22 +1,25 @@
 {
-"update_url": "https://clients2.google.com/service/update2/crx",
-
-	"name": "PostScript Viewer",
-	"short_name": "ps-wasm",
-	"version": "0.21",
-	"icons": { "128": "logo.png" },
-	"description": "Rendering PostScript using GhostScript in WebAssembly.",
-	"manifest_version": 2,
-	"background": {
-		"scripts": [
-		"background.js"
-		]
-	},
-	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
-	"permissions": [
-		"<all_urls>",
-		"webRequest",
-		"webRequestBlocking"
-	],
-	"web_accessible_resources": ["viewer.html", "viewer.js"]
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "description": "Rendering PostScript using GhostScript in WebAssembly.",
+  "host_permissions": [ "<all_urls>" ],
+  "icons": { "128": "logo.png" },
+  "manifest_version": 3,
+  "name": "PostScript Viewer",
+  "permissions": [
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "short_name": "ps-wasm",
+  "update_url": "https://clients2.google.com/service/update2/crx",
+  "version": "0.31",
+  "web_accessible_resources": [
+    {
+      "resources": [ "viewer.html" ],
+      "matches": [ "<all_urls>" ]
+    }
+  ]
 }
